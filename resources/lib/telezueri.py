@@ -35,7 +35,6 @@ import xbmcaddon
 import requests
 
 import dateutil.parser
-from simplecache import SimpleCache
 from youtube_dl import YoutubeDL
 import YDStreamExtractor
 
@@ -65,10 +64,6 @@ LANGUAGE = REAL_SETTINGS.getLocalizedString
 PROFILE = xbmc.translatePath(
     REAL_SETTINGS.getAddonInfo('profile')).decode("utf-8")
 
-HOST = 'telezueri.ch'
-HOST_URL = 'https://www.%s' % HOST
-API_URL = '%s/api/pub/gql/telezueri' % HOST_URL
-PARTNER_ID = '1719221'
 TIMEOUT = 30
 CONTENT_TYPE = 'videos'
 DEBUG = get_boolean_setting('Enable_Debugging')
@@ -104,8 +99,14 @@ def get_params():
 class Telezueri(object):
     def __init__(self):
         log('__init__')
-        self.cache = SimpleCache()
         self.ydl = YoutubeDL()
+
+        self.PARTNER_ID = '1719221'
+        self.HOST = 'telezueri.ch'
+        self.HOST_URL = 'https://www.%s' % self.HOST
+        name, dom = self.HOST.split('.')
+        self.API_URL = '%s/api/pub/gql/%s' % (self.HOST_URL, name)
+
 
     @staticmethod
     def build_url(mode=None, name=None, url=None, page_hash=None,
@@ -257,7 +258,9 @@ class Telezueri(object):
         }
         headers = {'Content-Type': 'application/json'}
         r = requests.post(
-            API_URL, data=json.dumps(payload).encode(), headers=headers)
+            self.API_URL, data=json.dumps(payload).encode(), headers=headers)
+        if not r.ok:
+            log('build_all_shows_menu: Request failed.', level=xbmc.LOGERROR)
         js = r.json()
         shows = []
         for show_entry in js['data']['pageForUrl']['page']['slots']:
@@ -346,11 +349,6 @@ class Telezueri(object):
               ... on Article {
                 id
                 title
-                mainRessort {
-                  parent { title }
-                  title
-                }
-                relativeUrl
                 mainAssetRelation {
                   title
                   teaserImage {
@@ -366,29 +364,6 @@ class Telezueri(object):
                       }
                       keywords
                     }
-                  }
-                }
-                stoerer {
-                  title
-                  teaserImage {
-                    imageUrl
-                  }
-                  asset {
-                    ... on VideoAsset {
-                      kalturaId
-                      kalturaMeta {
-                        tags
-                        categories
-                        duration
-                      }
-                      keywords
-                    }
-                  }
-                }
-                sponsor {
-                  url
-                  image {
-                    imageUrl
                   }
                 }
               }
@@ -396,39 +371,6 @@ class Telezueri(object):
             segments: nextPlayableArticles(articleId: $articleId) {
               data {
                 id
-                mainRessort {
-                  parent { title }
-                  title
-                }
-                title
-                relativeUrl
-                mainAssetRelation {
-                  title
-                  teaserImage {
-                    imageUrl
-                  }
-                  asset {
-                    ... on VideoAsset {
-                      kalturaId
-                      kalturaMeta {
-                        tags
-                        categories
-                        duration
-                      }
-                      keywords
-                    }
-                  }
-                }
-              }
-              total
-            }
-            recommendations: recommendedArticles(articleId: $articleId, assetsContentType: ["asset_video"]) {
-              data {
-                id
-                mainRessort {
-                  parent { title }
-                  title
-                }
                 title
                 relativeUrl
                 mainAssetRelation {
@@ -459,9 +401,9 @@ class Telezueri(object):
         }
         headers = {'Content-Type': 'application/json'}
         r = requests.post(
-            API_URL, data=json.dumps(payload).encode(), headers=headers)
+            self.API_URL, data=json.dumps(payload).encode(), headers=headers)
         if not r.ok:
-            log('extract_playlist: Request failed for %s.' % article_id)
+            log('extract_playlist: Request failed for %s.' % article_id, level=xbmc.LOGERROR)
         js = r.json()
         videos = []
         segments = js['data']['segments']['data']
@@ -555,9 +497,9 @@ class Telezueri(object):
         }
         headers = {'Content-Type': 'application/json'}
         r = requests.post(
-            API_URL, data=json.dumps(payload).encode(), headers=headers)
+            self.API_URL, data=json.dumps(payload).encode(), headers=headers)
         if not r.ok:
-            log('build_show_menu: Request failed for %s.' % relative_url)
+            log('build_show_menu: Request failed for %s.' % relative_url, level=xbmc.LOGERROR)
         js = r.json()
 
         shows = []
@@ -659,7 +601,7 @@ class Telezueri(object):
         # play_item = xbmcgui.ListItem('Telezüri Video', path=None)
         # xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, play_item)
         self.ydl.add_default_info_extractors()
-        ytdl_url = 'kaltura:%s:%s' % (PARTNER_ID, kaltura_id)
+        ytdl_url = 'kaltura:%s:%s' % (self.PARTNER_ID, kaltura_id)
         log('play_video, ytdl_url=%s' % ytdl_url)
         vid = YDStreamExtractor.getVideoInfo(ytdl_url, quality=2)
         stream_url = vid.streamURL()
