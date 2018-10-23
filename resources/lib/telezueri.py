@@ -147,14 +147,14 @@ class Telezueri(object):
                 'isFolder': True,
                 'displayItem': True,
             }, {
-                # Newest shows
-                'name': 'News',  # TODO: LANGUAGE
+                # News
+                'name': LANGUAGE(30051),
                 'mode': 11,
                 'isFolder': True,
                 'displayItem': True,
             }, {
-                # Live TV
-                'name': 'Categories',  # TODO: LANGUAGE
+                # Categories
+                'name': LANGUAGE(30052),
                 'mode': 12,
                 'isFolder': True,
                 'displayItem': True,
@@ -174,23 +174,23 @@ class Telezueri(object):
     def build_categories_menu(self):
         category_list = [
             {
-                'display_name': 'Most viewed',  # TODO: LANGUAGE
+                'display_name': LANGUAGE(30053),
                 'group_name': 'am-meisten-gesehen',
                 'relative_url': None,
             }, {
-                'display_name': 'Viral',  # TODO: LANGUAGE
+                'display_name': LANGUAGE(30054),
                 'group_name': 'viral',
                 'relative_url': None,
             }, {
-                'display_name': 'Entertainment',  # TODO: LANGUAGE
+                'display_name': LANGUAGE(30055),
                 'group_name': 'unterhaltung',
                 'relative_url': None,
             }, {
-                'display_name': 'Sport',
+                'display_name': LANGUAGE(30056),
                 'group_name': 'sport',
                 'relative_url': '/sport',
             }, {
-                'display_name': 'News',
+                'display_name': LANGUAGE(30051),
                 'group_name': 'news',
                 'relative_url': '/news',
             }]
@@ -573,20 +573,6 @@ class Telezueri(object):
                 'relative_url': show_relative_url,
             })
         return shows
-
-    def build_live_menu(self):
-        """
-        Builds the live TV menu.
-        """
-        log('build_live_menu')
-        list_item = xbmcgui.ListItem(label=LANGUAGE(30074))
-        list_item.setProperty('IsPlayable', 'true')
-        list_item.setArt({
-            'thumb': ICON,
-        })
-        url = self.build_url(mode=51)
-        xbmcplugin.addDirectoryItem(
-            int(sys.argv[1]), url, list_item, isFolder=False)
 
     def play_video(self, name, kaltura_id):
         """
