@@ -6,7 +6,7 @@
 
 ## Features
  - [x] Overview over all the shows.
- - [] List the newest available shows (currently not possible, because the server provides wrong date tags)
+ - [ ] List the newest available shows (currently not possible, because the server provides wrong date tags)
  - [x] List videos by categories (News, Sports, Entertainment, etc.)
 
 <!-- ## Installation
