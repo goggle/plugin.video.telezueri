@@ -34,7 +34,7 @@ import xbmcaddon
 
 import requests
 
-import dateutil.parser
+# import dateutil.parser
 from youtube_dl import YoutubeDL
 import YDStreamExtractor
 
@@ -106,7 +106,6 @@ class Telezueri(object):
         self.HOST_URL = 'https://www.%s' % self.HOST
         name, dom = self.HOST.split('.')
         self.API_URL = '%s/api/pub/gql/%s' % (self.HOST_URL, name)
-
 
     @staticmethod
     def build_url(mode=None, name=None, url=None, page_hash=None,
@@ -267,18 +266,17 @@ class Telezueri(object):
             context = show_entry['context']
             if context:
                 show = {
-                    'title': show_entry['context']['title'],
-                    'lead': show_entry['context']['lead'],
-                    'description': show_entry['context'].get('text'),
-                    'image': show_entry['context']['teaserImage']['imageUrl'],
-                    'relative_url': show_entry['context']['headRessort']['relativeUrl'],
+                    'title': context['title'],
+                    'lead': context['lead'],
+                    'description': context.get('text'),
+                    'image': context['teaserImage']['imageUrl'],
+                    'relative_url': context['headRessort']['relativeUrl'],
                 }
                 shows.append(show)
 
         list_items = []
         for show in shows:
             list_item = xbmcgui.ListItem(label=show['title'])
-            list_item.setLabel2(show['lead'])
             list_item.setProperty('IsPlayable', 'false')
             list_item.setArt({
                 'thumb': show['image'],
@@ -301,12 +299,9 @@ class Telezueri(object):
         if not playlist:
             shows = self.extract_show_info(variable, select_group=select_group)
         else:
-            # shows = []
             shows = self.extract_playlist(variable)
-        # list_items = []
         for show in shows:
             list_item = xbmcgui.ListItem(label=show['title'])
-            # is_playable = 'false' if not show['is_folder'] else 'true'
             list_item.setProperty('IsPlayable', 'true')
             list_item.setArt({
                 'thumb': show['image'],
@@ -340,8 +335,6 @@ class Telezueri(object):
                     url=show['kaltura_id'])  # TODO: better URL layout
             xbmcplugin.addDirectoryItem(
                 int(sys.argv[1]), url, list_item, isFolder=show['is_folder'])
-        # xbmcplugin.addDirectoryItems(
-        #     int(sys.argv[1]), list_items, totalItems=len(list_items))
 
     def extract_playlist(self, article_id, fanart=None):
         query = """query VideoContext($articleId: ID!) {
@@ -403,22 +396,24 @@ class Telezueri(object):
         r = requests.post(
             self.API_URL, data=json.dumps(payload).encode(), headers=headers)
         if not r.ok:
-            log('extract_playlist: Request failed for %s.' % article_id, level=xbmc.LOGERROR)
+            log('extract_playlist: Request failed for %s.' %
+                article_id, level=xbmc.LOGERROR)
         js = r.json()
         videos = []
         segments = js['data']['segments']['data']
         for seg in segments:
             title = seg['title']
-            kaltura_id = seg['mainAssetRelation']['asset']['kalturaId']
-            duration = seg['mainAssetRelation']['asset']['kalturaMeta']['duration']
-            image = seg['mainAssetRelation']['teaserImage']['imageUrl']
+            mar = seg['mainAssetRelation']
+            kaltura_id = mar['asset']['kalturaId']
+            duration = mar['asset']['kalturaMeta']['duration']
+            image = mar['teaserImage']['imageUrl']
             aid = seg['id']
 
             videos.append({
                 'title': title,
                 'lead': None,
                 'image': image,
-                'date': None,  # TODO: improve
+                'date': None,
                 'duration': duration,
                 'kaltura_id': kaltura_id,
                 'fanart': fanart,
@@ -499,7 +494,8 @@ class Telezueri(object):
         r = requests.post(
             self.API_URL, data=json.dumps(payload).encode(), headers=headers)
         if not r.ok:
-            log('build_show_menu: Request failed for %s.' % relative_url, level=xbmc.LOGERROR)
+            log('build_show_menu: Request failed for %s.' % relative_url,
+                level=xbmc.LOGERROR)
         js = r.json()
 
         shows = []
@@ -520,7 +516,8 @@ class Telezueri(object):
                 title = item['context']['title']
                 aid = item['context']['id']
             except Exception:
-                log('Could not extract title or id for element %d in show %s' % (i, relative_url))
+                log('Could not extract title or id for element %d in show %s' %
+                    (i, relative_url))
                 continue
 
             try:
@@ -534,15 +531,19 @@ class Telezueri(object):
                 label_type = ''
                 show_relative_url = ''
                 is_folder = False
-                log('extract_show_info: Could not extract labeltype or RelativeUrl for element %d in show %s' % (i, relative_url))
+                log(('extract_show_info: Could not extract labeltype or '
+                    'RelativeUrl for element %d in show %s')
+                    % (i, relative_url))
 
             try:
-                kaltura_id = item['context']['mainAssetRelation']['asset']['kalturaId']
-                duration = item['context']['mainAssetRelation']['asset']['kalturaMeta']['duration']
+                asset = item['context']['mainAssetRelation']['asset']
+                kaltura_id = asset['kalturaId']
+                duration = asset['kalturaMeta']['duration']
             except Exception:
                 kaltura_id = None
                 duration = None
-                log('extract_show_info: Could not extract title or Kaltura ID for element %d in show %s' % (i, relative_url))
+                log(('extract_show_info: Could not extract title or Kaltura '
+                    'ID for element %d in show %s') % (i, relative_url))
                 if not is_folder:
                     continue
 
@@ -550,17 +551,20 @@ class Telezueri(object):
                 lead = item['context']['lead']
             except Exception:
                 lead = None
-                log('extract_show_info: No lead for %s' % item['context']['id'])
+                log('extract_show_info: No lead for %s' %
+                    item['context']['id'])
             try:
                 image = item['context']['teaserImage']['imageUrl']
             except Exception:
                 image = None
-                log('extract_show_info: No image for %s' % item['context']['id'])
+                log('extract_show_info: No image for %s' %
+                    item['context']['id'])
             try:
                 date = item['context']['dc']['effective']
             except Exception:
                 date = None
-                log('extract_show_info: No date for %s' % item['context']['id'])
+                log('extract_show_info: No date for %s' %
+                    item['context']['id'])
 
             shows.append({
                 'title': title,
