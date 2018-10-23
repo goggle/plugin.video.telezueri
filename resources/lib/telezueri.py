@@ -596,8 +596,6 @@ class Telezueri(object):
         kaltura_id  -- the Kaltura id of the video
         """
         log('play_video, kaltura_id=%s' % kaltura_id)
-        # play_item = xbmcgui.ListItem('Telezüri Video', path=None)
-        # xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, play_item)
         self.ydl.add_default_info_extractors()
         ytdl_url = 'kaltura:%s:%s' % (self.PARTNER_ID, kaltura_id)
         log('play_video, ytdl_url=%s' % ytdl_url)
