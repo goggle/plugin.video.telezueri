@@ -108,26 +108,20 @@ class Telezueri(object):
         self.API_URL = '%s/api/pub/gql/%s' % (self.HOST_URL, name)
 
     @staticmethod
-    def build_url(mode=None, name=None, url=None, page_hash=None,
-                  page=None, group=None):
+    def build_url(mode=None, name=None, group=None, kaltura_id=None):
         """Build a URL for this Kodi plugin.
 
         Keyword arguments:
-        mode      -- an integer representing the mode
-        name      -- a string containing some information, e.g. a video id
-        url       -- a plugin URL, if another plugin/script needs to called
-        page_hash -- a string (used to get additional videos through the API)
-        page      -- an integer used to indicate the current page in
-                     the list of items
-        group     -- a string for the group name
+        mode       -- an integer representing the mode
+        name       -- a string containing some information, e.g. a video id
+        group      -- a string for the group name
+        kaltura_id -- a string containing the Kaltura video id.
         """
         if mode:
             mode = str(mode)
-        if page:
-            page = str(page)
         added = False
-        queries = (url, mode, name, page_hash, page, group)
-        query_names = ('url', 'mode', 'name', 'page_hash', 'page', 'group')
+        queries = (mode, name, group, kaltura_id)
+        query_names = ('mode', 'name', 'group', 'kaltura_id')
         purl = sys.argv[0]
         for query, qname in zip(queries, query_names):
             if query:
@@ -332,7 +326,7 @@ class Telezueri(object):
             else:
                 url = self.build_url(
                     mode=50, name=show['title'].encode('utf-8'),
-                    url=show['kaltura_id'])  # TODO: better URL layout
+                    kaltura_id=show['kaltura_id'])  # TODO: better URL layout
             xbmcplugin.addDirectoryItem(
                 int(sys.argv[1]), url, list_item, isFolder=show['is_folder'])
 
@@ -634,11 +628,16 @@ def run():
         group = urllib.unquote_plus(params['group'])
     except Exception:
         group = None
+    try:
+        kaltura_id = urllib.unquote_plus(params['kaltura_id'])
+    except Exception:
+        kaltura_id = None
 
     log('Mode: ' + str(mode))
     log('URL : ' + str(url))
     log('Name: ' + str(name))
     log('Group: ' + str(group))
+    log('Kaltura ID: ' + str(kaltura_id))
 
     if mode is None:
         Telezueri().build_main_menu()
@@ -653,7 +652,7 @@ def run():
     elif mode == 21:
         Telezueri().build_show_menu(name, playlist=True)
     elif mode == 50:
-        Telezueri().play_video(name, url)
+        Telezueri().play_video(name, kaltura_id)
 
     xbmcplugin.setContent(int(sys.argv[1]), CONTENT_TYPE)
     xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_UNSORTED)
