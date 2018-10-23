@@ -1,6 +1,6 @@
 # TeleZüri 
 
-<img src="https://raw.githubusercontent.com/goggle/plugin.video.telebasel/master/resources/icon.png" width="256">
+<img src="https://raw.githubusercontent.com/goggle/plugin.video.telezueri/master/resources/icon.png" width="256">
 
 **TeleZüri** (plugin.video.telezueri) is a Kodi plugin to access the videos of the local Swiss TV station [TeleZüri](https://www.telezueri.ch).
 
@@ -27,7 +27,7 @@ If you like this plugin, consider to make a donation to the author of the plugin
 | Bitcoin | 14d2as82kQ3mRoCSyrnHNoDi8PkFvxMMgP | ![Bitcoin address](https://raw.githubusercontent.com/goggle/plugin.video.srfplaytv/af1c696004d9b42c730dc55f7e66596ec3521b99/bitcoin.png) |
 
 
-## Screenshots
-![Shows overview](https://raw.githubusercontent.com/goggle/plugin.video.telebasel/master/resources/screenshot-01.png)
-![Available episodes of a show](https://raw.githubusercontent.com/goggle/plugin.video.telebasel/master/resources/screenshot-02.png)
-![Episode information](https://raw.githubusercontent.com/goggle/plugin.video.telebasel/master/resources/screenshot-03.png)
+<!-- ## Screenshots -->
+<!-- ![Shows overview](https://raw.githubusercontent.com/goggle/plugin.video.telezueri/master/resources/screenshot-01.png) -->
+<!-- ![Available episodes of a show](https://raw.githubusercontent.com/goggle/plugin.video.telezueri/master/resources/screenshot-02.png) -->
+<!-- ![Episode information](https://raw.githubusercontent.com/goggle/plugin.video.telezueri/master/resources/screenshot-03.png) -->
