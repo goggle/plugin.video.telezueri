@@ -100,12 +100,12 @@ class Telezueri(object):
     def __init__(self):
         log('__init__')
         self.ydl = YoutubeDL()
+        self.partner_id = '1719221'
+        self.host = 'telezueri.ch'
 
-        self.PARTNER_ID = '1719221'
-        self.HOST = 'telezueri.ch'
-        self.HOST_URL = 'https://www.%s' % self.HOST
-        name, dom = self.HOST.split('.')
-        self.API_URL = '%s/api/pub/gql/%s' % (self.HOST_URL, name)
+    def api_url(self):
+        name, _ = self.host.split('.')
+        return 'https://www.%s/api/pub/gql/%s' % (self.host, name)
 
     @staticmethod
     def build_url(mode=None, name=None, group=None, kaltura_id=None):
@@ -130,13 +130,27 @@ class Telezueri(object):
                 added = True
         return purl
 
+    def request_json(self, payload, headers):
+        """
+        Requests a json from the API.
+
+        Keyword arguments:
+        payload  -- The data to send as a dictionary.
+        headers  -- The request headers.
+        """
+        req = requests.post(
+            self.api_url(), data=json.dumps(payload).encode(), headers=headers)
+        if not req.ok:
+            log('build_all_shows_menu: Request failed.', level=xbmc.LOGERROR)
+        return req.json()
+
     def build_main_menu(self):
         """
         Builds the main menu of the plugin:
 
         All shows
-        Newest shows
-        Live TV
+        News
+        Categories
         """
         log('build_main_menu')
         main_menu_list = [
@@ -172,6 +186,9 @@ class Telezueri(object):
                     listitem=list_item, isFolder=menu_item['isFolder'])
 
     def build_categories_menu(self):
+        """
+        Builds the 'Categories' menu.
+        """
         category_list = [
             {
                 'display_name': LANGUAGE(30053),
@@ -214,8 +231,8 @@ class Telezueri(object):
                 url = self.build_url(
                     mode=20, name='/videos', group=cat_item['group_name'])
             xbmcplugin.addDirectoryItem(
-                    handle=int(sys.argv[1]), url=url,
-                    listitem=list_item, isFolder=True)
+                handle=int(sys.argv[1]), url=url,
+                listitem=list_item, isFolder=True)
 
     def build_all_shows_menu(self):
         """
@@ -249,12 +266,8 @@ class Telezueri(object):
             'query': query,
             'variables': {'url': '/sendungen'}
         }
-        headers = {'Content-Type': 'application/json'}
-        r = requests.post(
-            self.API_URL, data=json.dumps(payload).encode(), headers=headers)
-        if not r.ok:
-            log('build_all_shows_menu: Request failed.', level=xbmc.LOGERROR)
-        js = r.json()
+        js = self.request_json(
+            payload, headers={'Content-Type': 'application/json'})
         shows = []
         for show_entry in js['data']['pageForUrl']['page']['slots']:
             context = show_entry['context']
@@ -326,9 +339,11 @@ class Telezueri(object):
             else:
                 url = self.build_url(
                     mode=50, name=show['title'].encode('utf-8'),
-                    kaltura_id=show['kaltura_id'])  # TODO: better URL layout
+                    kaltura_id=show['kaltura_id'])
             xbmcplugin.addDirectoryItem(
                 int(sys.argv[1]), url, list_item, isFolder=show['is_folder'])
+            # xbmcplugin.addDirectoryItem(
+            #     int(sys.argv[1]), url, list_item, isFolder=show['is_folder'])
 
     def extract_playlist(self, article_id, fanart=None):
         query = """query VideoContext($articleId: ID!) {
@@ -386,13 +401,8 @@ class Telezueri(object):
             'query': query,
             'variables': {'articleId': article_id}
         }
-        headers = {'Content-Type': 'application/json'}
-        r = requests.post(
-            self.API_URL, data=json.dumps(payload).encode(), headers=headers)
-        if not r.ok:
-            log('extract_playlist: Request failed for %s.' %
-                article_id, level=xbmc.LOGERROR)
-        js = r.json()
+        js = self.request_json(
+            payload, headers={'Content-Type': 'application/json'})
         videos = []
         segments = js['data']['segments']['data']
         for seg in segments:
@@ -484,13 +494,8 @@ class Telezueri(object):
             'query': query,
             'variables': {'url': relative_url}
         }
-        headers = {'Content-Type': 'application/json'}
-        r = requests.post(
-            self.API_URL, data=json.dumps(payload).encode(), headers=headers)
-        if not r.ok:
-            log('build_show_menu: Request failed for %s.' % relative_url,
-                level=xbmc.LOGERROR)
-        js = r.json()
+        js = self.request_json(
+            payload, headers={'Content-Type': 'application/json'})
 
         shows = []
         try:
@@ -517,16 +522,14 @@ class Telezueri(object):
             try:
                 label_type = item['context']['labeltype']
                 show_relative_url = item['context']['relativeUrl']
-                if label_type == 'playlist' and show_relative_url:
-                    is_folder = True
-                else:
-                    is_folder = False
+                is_folder = (bool(label_type == 'playlist') and
+                             bool(show_relative_url))
             except Exception:
                 label_type = ''
                 show_relative_url = ''
                 is_folder = False
                 log(('extract_show_info: Could not extract labeltype or '
-                    'RelativeUrl for element %d in show %s')
+                     'RelativeUrl for element %d in show %s')
                     % (i, relative_url))
 
             try:
@@ -537,7 +540,7 @@ class Telezueri(object):
                 kaltura_id = None
                 duration = None
                 log(('extract_show_info: Could not extract title or Kaltura '
-                    'ID for element %d in show %s') % (i, relative_url))
+                     'ID for element %d in show %s') % (i, relative_url))
                 if not is_folder:
                     continue
 
@@ -583,7 +586,7 @@ class Telezueri(object):
         """
         log('play_video, kaltura_id=%s' % kaltura_id)
         self.ydl.add_default_info_extractors()
-        ytdl_url = 'kaltura:%s:%s' % (self.PARTNER_ID, kaltura_id)
+        ytdl_url = 'kaltura:%s:%s' % (self.partner_id, kaltura_id)
         log('play_video, ytdl_url=%s' % ytdl_url)
         vid = YDStreamExtractor.getVideoInfo(ytdl_url, quality=2)
         stream_url = vid.streamURL()
