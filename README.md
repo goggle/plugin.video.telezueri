@@ -16,7 +16,7 @@
 
 ## Support this plugin
 How you can help improving this plugin:
- - For bugs and feature requests use the [issue tracker](https://github.com/goggle/plugin.video.telezueri/issues) on the github page.
+ - For bugs and feature requests use the [issue tracker](https://github.com/goggle/plugin.video.telezueri/issues) on the github page. Note that the actual code is located in [script.module.azmedien](https://github.com/goggle/script.module.azmedien)
  - Feel free to submit a pull request. Please style your code according to [PEP 8](https://www.python.org/dev/peps/pep-0008/).
 
 If you like this plugin, consider to make a donation to the author of the plugin:
