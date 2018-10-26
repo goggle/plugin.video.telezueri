@@ -34,5 +34,7 @@ def run():
     """
     Run the plugin.
     """
-    customer = azmedien.CustomerAddon(addon_id=ADDON_ID, real_settings=REAL_SETTINGS, icon=ICON, fanart=FANART)
+    customer = azmedien.CustomerAddon(addon_id=ADDON_ID,
+                                      real_settings=REAL_SETTINGS,
+                                      icon=ICON, fanart=FANART)
     azmedien.run(customer, host=HOST)
