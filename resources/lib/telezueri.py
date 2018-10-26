@@ -19,20 +19,16 @@
 # along with plugin.video.telezueri.
 # If not, see <http://www.gnu.org/licenses/>.
 
-import xbmc
 import xbmcaddon
 import azmedien
 
 ADDON_ID = 'plugin.video.telezueri'
 REAL_SETTINGS = xbmcaddon.Addon(id=ADDON_ID)
-ADDON_NAME = REAL_SETTINGS.getAddonInfo('name')
-ADDON_VERSION = REAL_SETTINGS.getAddonInfo('version')
 ICON = REAL_SETTINGS.getAddonInfo('icon')
 FANART = REAL_SETTINGS.getAddonInfo('fanart')
 LANGUAGE = REAL_SETTINGS.getLocalizedString
-PROFILE = xbmc.translatePath(
-    REAL_SETTINGS.getAddonInfo('profile')).decode("utf-8")
 HOST = 'telezueri.ch'
+
 
 def run():
     """
